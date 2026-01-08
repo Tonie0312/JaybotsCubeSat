@@ -10,8 +10,8 @@ The provided functions are only for reference, you do not need to use them.
 You will need to complete the take_photo() function and configure the VARIABLES section
 """
 
-#AUTHOR: 
-#DATE:
+#AUTHOR: JAYBOTS (Hailey Kim, Anthony Chen, Matthew Glasser, Anika Anne, Nathaniel Marra)
+#DATE: 1/7/2026
 
 #import libraries
 import time
@@ -22,9 +22,9 @@ from git import Repo
 from picamera2 import Picamera2
 
 #VARIABLES
-THRESHOLD = 0      #Any desired value from the accelerometer
-REPO_PATH = ""     #Your github repo path: ex. /home/pi/FlatSatChallenge
-FOLDER_PATH = ""   #Your image folder path in your GitHub repo: ex. /Images
+THRESHOLD = 10     #Any desired value from the accelerometer
+REPO_PATH = "/home/jaybots-16700/JaybotsCubeSat"     #Your github repo path: ex. /home/pi/FlatSatChallenge
+FOLDER_PATH = "/Images"   #Your image folder path in your GitHub repo: ex. /Images
 
 #imu and camera initialization
 i2c = board.I2C()
@@ -60,25 +60,40 @@ def img_gen(name):
         name (str): your name ex. MasonM
     """
     t = time.strftime("_%H%M%S")
-    imgname = (f'{REPO_PATH}/{FOLDER_PATH}/{name}{t}.jpg')
+    imgname = (f'{REPO_PATH}{FOLDER_PATH}/{name}{t}.jpg')
     return imgname
 
 
 def take_photo():
     """
-    This function is NOT complete. Takes a photo when the FlatSat is shaken.
-    Replace psuedocode with your own code.
+    Takes a photo when the FlatSat is shaken.
     """
+    name = "HaileyK"
+
+    # Camera setup
+    camera_config = picam2.create_still_configuration()
+    picam2.configure(camera_config)
+    picam2.start()
+    time.sleep(2) # let camera warm up
+
     while True:
         accelx, accely, accelz = accel_gyro.acceleration
+        print(f"x={accelx:.2f}, y={accely:.2f}, z={accelz:.2f}")
 
-        #CHECKS IF READINGS ARE ABOVE THRESHOLD
-            #PAUSE
-            #name = ""     #First Name, Last Initial  ex. MasonM
-            #TAKE PHOTO
-            #PUSH PHOTO TO GITHUB
-        
-        #PAUSE
+        if abs(accelx) > THRESHOLD or abs(accely) > THRESHOLD or abs(accelz) > THRESHOLD:
+            print(f"Shake detected! x={accelx:.2f}, y={accely:.2f}, z={accelz:.2f}")
+
+            filename = img_gen(name)
+
+            time.sleep(1) # 1 s delay to prevent shaking
+            picam2.capture_file(filename)
+            print(f"Photo saved: {filename}")
+
+            git_push()
+
+            time.sleep(3) # prevent multiple photos from same shake
+
+        time.sleep(0.5) # check acceleration 2 times per second
 
 
 def main():
